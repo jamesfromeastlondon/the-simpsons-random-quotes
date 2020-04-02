@@ -1,0 +1,117 @@
+const TweetQuote = (props) => {
+  return (
+    <a
+      id="tweet-quote"
+      href={
+        "https://www.twitter.com/intent/tweet?text=" +
+        props.tweetQuote +
+        "+-+" +
+        props.tweetAuthor
+      }
+      target="_blank"
+    >
+      Tweet quote
+    </a>
+  );
+};
+
+const NewQuote = (props) => {
+  return (
+    <button id="new-quote" onClick={props.getQuote}>
+      New quote
+    </button>
+  );
+};
+
+class Quotes extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  render() {
+    return (
+      <div id="quote-box">
+        <img id="image" src={this.props.image} />
+        <h1 id="text">{this.props.quote}</h1>
+        <p id="author">{this.props.author}</p>
+      </div>
+    );
+  }
+}
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      quote: "",
+      author: "",
+      image: "",
+      isHorizontal: window.innerWidth > window.innerHeight ? true : false
+    };
+    this.getQuote = this.getQuote.bind(this);
+    this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
+  }
+  getQuote() {
+    fetch("https://thesimpsonsquoteapi.glitch.me/quotes")
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        this.setState({
+          quote: data[0].quote,
+          author: data[0].character,
+          image: data[0].image
+        });
+      });
+  }
+  updateWindowDimensions() {
+    if (window.innerWidth > window.innerHeight) {
+      this.setState({
+        isHorizontal: true
+      });
+    } else {
+      this.setState({
+        isHorizontal: false
+      });
+    }
+  }
+  componentDidMount() {
+    this.getQuote();
+    window.addEventListener("resize", this.updateWindowDimensions);
+  }
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.updateWindowDimensions);
+  }
+  render() {
+    const tweetQuote = this.state.quote.split(" ").join("+");
+    const tweetAuthor = this.state.author.split(" ").join("+");
+    if (this.state.isHorizontal) {
+      return (
+        <div id="horizontal">
+          <TweetQuote tweetQuote={tweetQuote} tweetAuthor={tweetAuthor} />
+          <Quotes
+            quote={this.state.quote}
+            author={this.state.author}
+            image={this.state.image}
+          />
+          <NewQuote getQuote={this.getQuote} />
+        </div>
+      );
+    } else {
+      return (
+        <div id="vertical">
+          <Quotes
+            quote={this.state.quote}
+            author={this.state.author}
+            image={this.state.image}
+          />
+          <div>
+            <TweetQuote tweetQuote={tweetQuote} tweetAuthor={tweetAuthor} />
+            <NewQuote getQuote={this.getQuote} />
+          </div>
+        </div>
+      );
+    }
+  }
+}
+
+ReactDOM.render(<App />, document.getElementById("root"));
